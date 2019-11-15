@@ -84,3 +84,97 @@ bool QM::isGreyCode(string a, string b)
 	}
 	return (flag == 1);
 }
+
+
+// hàm thực hiện thay thế các vị trí trùng lấp khi thực hiện phép dán hai số nhị phân bằng dontcares
+// chẳng hạn 1000 với 1001 sẽ thế thành 100-
+string QM::replace_complements(string a, string b)
+{
+	string temp = "";
+	for (int i = 0; i < a.length(); i++)
+		if (a[i] != b[i])
+			temp = temp + "-";
+		else
+			temp = temp + a[i];
+	return temp;
+}
+
+// hàm kiểm tra chuỗi b có nằm trong string a hay không
+bool QM::in_vector(vector<string> a, string b)
+{
+	for (int i = 0; i < a.size(); i++)
+		if (a[i].compare(b) == 0)
+			return true;
+	return false;
+}
+
+// hàm thực hiện phép dán để giảm dần các giá trị minterm
+// ví dụ: 1000 dán với 1001 chỉ thành 1 giá trị đó là 100-
+vector<string> QM::reduce(vector<string> minterms)
+{
+	vector<string> newminterms;
+
+	int max = minterms.size();
+	int* checked = new int[max];
+	for (int i = 0; i < max; i++)
+	{
+		for (int j = i; j < max; j++)
+		{
+			// Nếu tìm được mã xám (tức là hai số nhị phân khác nhau một bit) thay thế bit đó với dontcare 
+			if (isGreyCode(minterms[i], minterms[j]))
+			{
+				checked[i] = 1;
+				checked[j] = 1;
+				// kiểm tra xem minterm đã có trong vector newminterm chưa, có thì k thêm vào
+				if (!in_vector(newminterms, replace_complements(minterms[i], minterms[j])))
+					newminterms.push_back(replace_complements(minterms[i], minterms[j]));
+			}
+		}
+	}
+	// thêm các minterm chưa thực hiện phép dán nào vào trong newminterm
+	for (int i = 0; i < max; i++)
+	{
+		if (checked[i] != 1 && !in_vector(newminterms, minterms[i]))
+			newminterms.push_back(minterms[i]);
+	}
+	delete[] checked;
+	return newminterms;
+}
+
+// hàm chuyển giá trị số thành biến
+// Ví dụ: 011- thành a'bc
+string QM::getValue(string a)
+{
+	string temp = "";
+	vector<string> vars = this->getVars();
+	if (a == dontcares)
+		return "1";
+
+	for (int i = 0; i < a.length(); i++)
+	{
+		if (a[i] != '-')
+		{
+			if (a[i] == '0')
+				temp = temp + vars[i] + "\'";
+			else
+				temp = temp + vars[i];
+		}
+	}
+	return temp;
+}
+
+// Kiểm tra 2 vector có bằng nhau hay không
+bool QM::VectorsEqual(vector<string> a, vector<string> b)
+{
+	if (a.size() != b.size())
+		return false;
+
+	sort(a.begin(), a.end());
+	sort(b.begin(), b.end());
+	for (int i = 0; i < a.size(); i++)
+	{
+		if (a[i] != b[i])
+			return false;
+	}
+	return true;
+}

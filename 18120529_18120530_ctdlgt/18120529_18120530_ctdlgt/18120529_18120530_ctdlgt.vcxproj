@@ -115,10 +115,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MaTran.h" />
     <ClInclude Include="QM.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="MaTran.cpp" />
     <ClCompile Include="QM.cpp" />
     <ClCompile Include="Vector.cpp" />
   </ItemGroup>

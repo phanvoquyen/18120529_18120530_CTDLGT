@@ -39,6 +39,19 @@ public:
 	string charToBin(string a);
 	// hàm kiểm tra hai số nhị phân khác nhau một bit, tuân theo quy tắc mã xám trong thuật toán Quine McClusky, nếu khác nhau đúng 1 bit trả về true
 	bool isGreyCode(string a, string b);
+	// hàm thực hiện thay thế các vị trí trùng lấp khi thực hiện phép dán hai số nhị phân bằng dontcares
+	// chẳng hạn 1000 với 1001 sẽ thế thành 100-
+	string replace_complements(string a, string b);
+	// hàm kiểm tra chuỗi b có nằm trong string a hay không
+	bool in_vector(vector<string> a, string b);
+	// hàm thực hiện phép dán để giảm dần các giá trị minterm
+	// ví dụ: 1000 dán với 1001 chỉ thành 1 giá trị đó là 100-
+	vector<string> reduce(vector<string> minterms);
+	// hàm chuyển giá trị số thành biến
+	// Ví dụ: 011- thành a'bc
+	string getValue(string a);
+	// Kiểm tra 2 vector có bằng nhau hay không
+	bool VectorsEqual(vector<string> a, vector<string> b);
 };
 
 
