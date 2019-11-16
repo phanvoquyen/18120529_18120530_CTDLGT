@@ -117,6 +117,38 @@ void MaTran::ThuHoi()
 		delete[] matrix[i];
 	delete[] matrix;
 }
+
+int MaTran::HangMaTran() {
+	int hang = 0;
+
+	MaTran the = *this;
+	MaTran b = the.RutGonMaTran();
+	bool kt = false;
+	for (int i = 0; i < dong; i++) {
+		for (int j = i; j < cot; j++)
+			if (the.matrix[i][j] != 0) {
+				kt = true;
+				break;
+			}
+		if (kt) {
+			kt = false;
+			hang++;
+		}
+	}
+	return hang;
+}
+MaTran MaTran::NghichDao() {
+	MaTran c;
+	if (dong != cot)
+		return c;
+	MaTran the = *this;
+	MaTran b = the.RutGonMaTran();
+	if (the.HangMaTran() != dong)
+		return c;
+	return b;
+}
+
+
 MaTran MaTran::RutGonMaTran() {
 	MaTran b(dong, cot);
 	int i, j;
@@ -282,6 +314,111 @@ MaTran MaTran::NhanMaTran(MaTran m)
 
 	return result;
 }
+
+// Hoán vị dòng
+void MaTran::swapRow(int i, int j)
+{
+	for (int k = 0; k <= dong; k++)
+	{
+		float temp = matrix[i][k];
+		matrix[i][k] = matrix[j][k];
+		matrix[j][k] = temp;
+	}
+}
+
+// Thực hiện phép khử gauss
+int MaTran::GaussElim()
+{
+	// for k chạy theo số cột
+	for (int k = 0; k < cot; k++)
+	{
+		// Khởi tạo giá trị lớn nhất, vị trí có giá trị lớn nhất 
+		int index_max = k;
+		double value_max = matrix[index_max][k];
+
+		// Đi tìm giá trị lớn nhất, vị trí có giá trị lớn nhất
+		for (int i = k + 1; i < dong; i++)
+			if (fabs(matrix[i][k]) > value_max)
+				value_max = matrix[i][k], index_max = i;
+
+		// Kiểm tra khác 0, phòng trường hợp chia cho 0
+		if (!matrix[index_max][k])
+			return k; // ma trận singular 
+
+		// đổi chỗ dòng có giá trị lớn nhất với dòng đang xét
+		if (index_max != k)
+			swapRow(k, index_max);
+
+		// i chạy theo hàng
+		for (int i = k + 1; i < dong; i++)
+		{
+			float f = matrix[i][k] / matrix[k][k];
+
+			// trừ dòng, j chạy theo cột
+			for (int j = k + 1; j <= cot; j++)
+				matrix[i][j] -= matrix[k][j] * f;
+
+			// gán lại phần tử mốc bằng 0
+			matrix[i][k] = 0;
+		}
+		//cout << "---------------------------------------" << endl;
+		//XuatHe();
+	}
+	//cout << "------------------------------" << endl;
+	//XuatHe();
+	return -1;
+}
+
+// Giải nghiệm của hệ 
+void MaTran::Solve()
+{
+	float *x = new float[cot];  // mảng một chiều lưu nghiệm
+
+	// Tình từ dưới tính lên
+	for (int i = dong - 1; i >= 0; i--)
+	{
+		// bắt đầu từ vế phải của phương trình
+		x[i] = matrix[i][dong];
+
+		for (int j = i + 1; j < dong; j++)
+		{
+			// trừ tất cả các giá trị bên vế trái, ngoại trừ hệ số của biến đang được tính
+			x[i] -= matrix[i][j] * x[j];
+		}
+
+		// chia hệ số của biến đang tính cho vế phải
+		x[i] = x[i] / matrix[i][i];
+	}
+
+	cout << "Nghiem cua he phuong trinh la: " << endl;
+	for (int i = 0; i < dong; i++)
+		cout << x[i] << endl;
+}
+
+// Giải hệ
+void MaTran::GetValue()
+{
+	int singular_flag = GaussElim();
+
+	// Nếu là ma trận singular
+	if (singular_flag != -1)
+	{
+		// singular matrix là mà trận chưa khẳng định được vô nghiệm hay vô số nghiệm
+		cout << "Ma tran singular" << endl;
+
+		// nếu vế phải vế trái đều bằng 0 thì kết luận vô nghiệm
+		if (matrix[singular_flag][dong])
+			cout << "He phuong trinh vo nghiem" << endl;
+		else
+			cout << "He phuong trinh co vo so nghiem" << endl;
+
+		return;
+	}
+
+	// Nếu không phải hai trường hợp trên thì tiến hành tính nghiệm
+	Solve();
+}
+
 
 MaTran::~MaTran()
 {
