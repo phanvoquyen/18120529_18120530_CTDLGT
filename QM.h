@@ -56,6 +56,12 @@ public:
 	vector<string> getPrimeImp(vector<string> minterms, vector<string> &mintermsTemp, string temp);
 	//kiểm tra xem nguyên tố phủ có thỏa minterm hay không
 	bool primeIncludes(string imp, string minTerm);
+	// hàm đếm số biến trong các phép phủ có thể có
+	int CountVar(set<int> comb, vector<string> primeImp);
+	// Hàm thực hiện tối tiểu
+	void minimise(vector<string> primeImp, vector<string> mintermsTemp, vector< set<int> > &functions);
+	void OutputFunctions(vector< set<int> > functions, vector<string> primeImp);
+	void getPosComb(vector< set<int> > &patLogic, int level, set<int> prod, set< set<int> > &posComb);
 };
 
 

@@ -280,3 +280,155 @@ bool QM::primeIncludes(string imp, string minTerm)
 	}
 	return true;
 }
+
+int QM::CountVar(set<int> comb, vector<string> primeImp)
+{
+	// trả về số biến trong tổ hợp phương pháp petrick
+	// comb lưu một dãy thứ tự các dòng chứa phần tử primeImp có thể phủ hết minterm
+	// primeImp lưu các giá trị prime implicant, tức là các giá trị có được sau ki thực hiện phép dán Quine và bản thân nó k dán được nữa
+	int count = 0;
+	set<int> ::iterator itr;
+	for (itr = comb.begin(); itr != comb.end(); ++itr)
+	{
+		int imp = *itr; // lưu vị trí dòng của một primeImp từ trong một chuỗi dòng lưu trong comb
+		for (int i = 0; i < primeImp[imp].size(); ++i)
+		{ //
+			if (primeImp[imp][i] != '-')
+				count++; // đếm lại số biến hiện diện trong primeImp, ví dụ 1-00 thì là ba biến, sau đó cộng dồn, thí dụ có biểu thức comb là 1-00+00-1 thì là 6
+		}
+	}
+	return count;
+
+}
+
+// Hàm thực hiện tối tiểu
+void QM::minimise(vector<string> primeImp, vector<string> mintermsTemp, vector< set<int> > &functions) {
+	// chuẩn bị cho bảng nguyên tố chủ chốt
+	bool **primeImpTab = new bool*[primeImp.size()];
+	for (int i = 0; i < primeImp.size(); i++)
+		primeImpTab[i] = new bool[mintermsTemp.size()];
+
+	for (int i = 0; i < primeImp.size(); ++i) {
+		for (int j = 0; j < mintermsTemp.size(); ++j) {
+			primeImpTab[i][j] = false;
+		}
+	}
+
+	for (int i = 0; i < primeImp.size(); ++i) {
+		for (int j = 0; j < mintermsTemp.size(); ++j) {
+			primeImpTab[i][j] = primeIncludes(primeImp[i], mintermsTemp[j]);
+		}
+	}
+
+	// petric logic
+	// thực hiện tìm ô đã được phủ, đối sánh ngang qua vị trí dòng, lưu lại vị trí dòng
+	vector< set<int> > patLogic;
+	for (int j = 0; j < mintermsTemp.size(); ++j)
+	{
+		set<int> x;
+		for (int i = 0; i < primeImp.size(); ++i)
+		{
+			if (primeImpTab[i][j] == true)
+			{
+				x.insert(i);
+			}
+		}
+		patLogic.push_back(x);
+	}
+
+	// tìm tất cả các phép ghép có thể xảy ra để tạo phủ
+	set< set<int> > posComb;
+	set<int> prod;
+	getPosComb(patLogic, 0, prod, posComb);  // thực hiện đệ quy liệt kê tất cả trường hợp, lưu vào posComb
+	int min = 1000; // tạo một biến min
+
+	//// in ra các phép phủ có thể có, đồng thời timd ra phép phủ có độ dài ngắn nhất, đồng nghĩa đó là phép phủ tối tiểu
+	set< set<int> > ::iterator itr1;
+	for (itr1 = posComb.begin(); itr1 != posComb.end(); ++itr1) // poscomb thì lưu nhiều dãy thỏa phép phủ
+	{
+		set<int> comb = *itr1; // comb sẽ lưu một dãy có thể thỏa phép phủ, dãy này chứa vị trí của các dòng có thể phủ
+		if (comb.size() < min)
+		{
+			min = comb.size();
+		}
+		set<int > ::iterator itr;
+		for (itr = comb.begin(); itr != comb.end(); ++itr)
+		{
+			int x = *itr;
+			//cout << x << " ";
+		}
+		cout << endl;
+	}
+
+	// rà lại một lượt để tìm ra phép phủ tối tiểu, nạp vào minComb, tức là phép phủ có chứa ít essetial prime implicant nhất, vd ab+bc thì ngắn hơn ab+bc+ca
+	vector< set<int> > minComb; // mincomb lưu lại các dãy thứ tự các dòng chứa các primeImp thỏa các dòng tạo thành phép phủ và số lượng prime là ít nhất
+	set< set<int> > ::iterator itr;
+	for (itr = posComb.begin(); itr != posComb.end(); ++itr)
+	{
+		set<int> comb = *itr;
+		if (comb.size() == min)
+		{
+			// min là độ dài phép phủ ngắn nhất
+			minComb.push_back(comb);
+		}
+	}
+
+	// giữa các phép phủ có cùng số essential primeImp thì ta rà số lượng biến để tìm tối tiểu, ví dụ ab+abc thì k được chọn khi so với ab+bc
+	min = 9999;
+	// chạy i dọc theo mincomb.size tức là chạy theo thứ tự các dòng chứa primeImp, sau đó đếm số biến của primeImp[i] và tìm số biến ít nhất
+	for (int i = 0; i < minComb.size(); ++i) {
+		if (CountVar(minComb[i], primeImp) < min) {
+			min = CountVar(minComb[i], primeImp);
+		}
+	}
+
+	// nếu thỏa có được một primeImp với số biến ít nhất thì lập tức nạp vào funtions
+	for (int i = 0; i < minComb.size(); ++i) {
+		if (CountVar(minComb[i], primeImp) == min) {
+			functions.push_back(minComb[i]); // functions là lưu các dãy các số thứ tự dòng thỏa phủ tối tiểu
+		}
+	}
+}
+
+void QM::OutputFunctions(vector< set<int> > functions, vector<string> primeImp)
+{
+	sort(functions.begin(), functions.end());
+	cout << "Nhung phep phu co the co la:" << endl;
+	for (int i = 0; i < functions.size(); ++i) {
+		set<int> function = functions[i]; // tạo biến function gán lần lượt các dãy thứ tự dòng tối tiểu
+		set<int> ::iterator itr;
+		cout << "+ Phep phu thu " << i + 1 << ":" << endl;
+		for (itr = function.begin(); itr != function.end(); ++itr)
+		{
+			int x = *itr; // x lưu thứ tự của mọt dòng trong dãy dòng được lưu trong function[i]
+			cout << getValue(primeImp[x]) << " + ";
+		}
+		cout << "\b\b    \n" << endl;
+	}
+}
+
+// đi tìm ra tất cả các phép phủ có thể có từ primeImp
+void QM::getPosComb(vector< set<int> > &patLogic, int level, set<int> prod, set< set<int> > &posComb)
+{
+	if (level == patLogic.size())
+	{
+		set<int> x = prod;
+		posComb.insert(x);
+		return;
+	}
+	else
+	{
+		set<int > ::iterator itr;
+		for (itr = patLogic[level].begin(); itr != patLogic[level].end(); ++itr)
+		{
+
+			int x = *itr;
+			bool inserted = prod.insert(x).second;
+			getPosComb(patLogic, level + 1, prod, posComb);
+			if (inserted)
+			{
+				prod.erase(x);
+			}
+		}
+	}
+}
